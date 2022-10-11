@@ -117,7 +117,7 @@ def parse_product(product_url, exporter: ExcelExporter):
 def export_product(product, exporter: ExcelExporter):
     """Exporting the product data."""
 
-    log(f"-> Exporting product: {product['title']} - {product['finition']}")
+    log(f"    -> Exporting product: {product['title']} - {product['finition']}")
 
     exporter.add_line([
         product["ref"],
