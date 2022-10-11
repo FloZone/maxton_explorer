@@ -88,16 +88,24 @@ def parse_product(product_url, exporter: ExcelExporter):
     # Extract variant names and prices
     variants = []
     variants_data = product_data.find_all("a", class_="projector_bundle_fake_item")
-    for variant in variants_data:
-        if "selected" in variant["class"]:
-            variant_price = price
-        else:
-            variant_price = variant.find("div", class_="fake_price").text
-            variant_price = price + float(variant_price.replace("+", "").replace("€", "").replace(",", "."))
+    if len(variants_data) > 0:
+        for variant in variants_data:
+            if "selected" in variant["class"]:
+                variant_price = price
+            else:
+                variant_price = variant.find("div", class_="fake_price").text
+                variant_price = price + float(variant_price.replace("+", "").replace("€", "").replace(",", "."))
+            variants.append(
+                {
+                    "price": variant_price,
+                    "finition": variant.find("div", class_="fake_name").text,
+                }
+            )
+    else:
         variants.append(
             {
-                "price": variant_price,
-                "finition": variant.find("div", class_="fake_name").text,
+                "price": price,
+                "finition": "",
             }
         )
 
