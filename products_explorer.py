@@ -113,7 +113,9 @@ def parse_product(product_url, exporter: ExcelExporter):
                     product_id = variant["data-product"]
                     variant_id = variant["data-values_id"]
                     response = requests.get(
-                        f"{base_url}/ajax/projector.php?product={product_id}&size=uniw&get=sizes,sizeprices&multiversions[selected]={variant_id}&multiversions[last_selected]={variant_id}"
+                        f"""{base_url}/ajax/projector.php?product={product_id}&
+                        size=uniw&get=sizes,sizeprices&multiversions[selected]=
+                        {variant_id}&multiversions[last_selected]={variant_id}"""
                     )
                     res = response.json()
                     variant_price = float(res["sizeprices"]["value"])
