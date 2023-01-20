@@ -3,6 +3,7 @@ from datetime import datetime
 import os
 from random import randint
 import time
+import unicodedata
 
 from bs4 import BeautifulSoup
 from openpyxl import Workbook
@@ -49,9 +50,8 @@ def browse_page(page_url, page_number):
 
     # For each product
     for product in products:
-        product_url = f"{base_url}{product['href']}"
         try:
-            parse_product(product_url, exporter)
+            parse_product(product['href'], exporter)
         except Exception as e:
             log("Cannot parse product", e)
 
@@ -84,7 +84,8 @@ def parse_product(product_url, exporter: ExcelExporter):
     product["description"] = description.replace("\n", "<br>")
     # Extract price
     price = product_data.find(id="projector_price_value").text
-    price = float(price.replace("€", "").replace(",", "."))
+    price = unicodedata.normalize("NFKD", price)
+    price = float(price.replace("€", "").replace(",", ".").replace(" ", ""))
     # Extract variant names and prices
     variants = []
     variants_data = product_data.find_all("a", class_="projector_bundle_fake_item")
@@ -94,7 +95,8 @@ def parse_product(product_url, exporter: ExcelExporter):
                 variant_price = price
             else:
                 variant_price = variant.find("div", class_="fake_price").text
-                variant_price = price + float(variant_price.replace("+", "").replace("€", "").replace(",", "."))
+                variant_price = unicodedata.normalize("NFKD", variant_price)
+                variant_price = price + float(variant_price.replace("+", "").replace("€", "").replace(",", ".").replace(" ", ""))
             variants.append(
                 {
                     "price": variant_price,
@@ -190,7 +192,7 @@ if __name__ == "__main__":
     if args.first_page > args.last_page:
         raise argparse.ArgumentTypeError(f"Invalid arguments: {args.first_page} > {args.last_page}")
 
-    base_url = args.base_url
+    base_url = args.base_url.rstrip("/")
     products_url = f"{base_url}/fre_m_Notre-Offre-1876.html"
 
     # For each catalog page
