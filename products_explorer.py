@@ -127,16 +127,7 @@ def parse_product(product_url, exporter: ExcelExporter):
                             "subref": res["sizes"]["code"],
                         }
                     )
-        else:
-            # TODO fix code duplication
-            variants.append(
-                {
-                    "price": price,
-                    "finition": "",
-                    "subref": product["ref"],
-                }
-            )
-    else:
+    if not variants:
         variants.append(
             {
                 "price": price,
