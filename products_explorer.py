@@ -12,11 +12,6 @@ import requests
 
 anonymous_name = "*************"
 
-# TODO voir description dernière balise vide qui fout la merde ?
-# TODO 500 produits par fichier excel
-# TODO useragent
-# TODO indicateur de progression
-
 
 class ExcelExporter:
     """Helper class for writing excel file."""
@@ -37,8 +32,15 @@ class ExcelExporter:
         self.write_file()
 
 
+product_count = 0
+exporter = ExcelExporter("default.xslx")
+
+
 def browse_page(page_url, page_number):
     """Browse all products pages and extract each product data."""
+
+    global product_count
+    global exporter
 
     log(f"Parsing page {page_number}: {page_url}")
     # Parse the page
@@ -49,15 +51,19 @@ def browse_page(page_url, page_number):
     products = data.find_all("a", class_="product_wrapper_hover")
     log(f"Find {len(products)} products")
 
-    # Generate filename for this page
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    export_filename = f"products_{now}_{page_number}.xlsx"
-    exporter = ExcelExporter(export_filename)
+    # One file for ~500 products (one page has ~120 products)
+    if page_number % 4 == 0:
+        # Generate filename
+        file_number = int(page_number / 4)
+        now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        export_filename = f"products_{now}_{file_number}.xlsx"
+        exporter = ExcelExporter(export_filename)
 
     # For each product
     for product in products:
         try:
             parse_product(product["href"], exporter)
+            product_count += 1
         except Exception as e:
             log("Cannot parse product", e)
 
@@ -65,7 +71,8 @@ def browse_page(page_url, page_number):
 def parse_product(product_url, exporter: ExcelExporter):
     """Parse the product page and extract its data."""
 
-    log(f"  -> Parsing product: {product_url}")
+    log(f"  -> [{product_count}] Parsing product: {product_url}")
+
     # Parse the product page
     product_request = requests.get(product_url)
     product_data = BeautifulSoup(product_request.content, "html.parser")
@@ -153,7 +160,7 @@ def parse_product(product_url, exporter: ExcelExporter):
 def export_product(product, exporter: ExcelExporter):
     """Exporting the product data."""
 
-    log(f"    -> Exporting product: {product['title']} - {product['finition']}")
+    log(f"    * Exporting product: {product['title']} - {product['finition']}")
 
     exporter.add_line(
         [
@@ -224,6 +231,6 @@ if __name__ == "__main__":
     products_url = f"{base_url}/fre_m_Notre-Offre-1876.html"
 
     # For each catalog page
-    for count in range(args.first_page, args.last_page):
-        page_url = f"{products_url}?counter={count}"
-        browse_page(page_url, count)
+    for page_number in range(args.first_page, args.last_page):
+        page_url = f"{products_url}?counter={page_number}"
+        browse_page(page_url, page_number)
