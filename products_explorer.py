@@ -3,6 +3,7 @@ from datetime import datetime
 import os
 from random import randint
 import time
+import traceback
 import unicodedata
 
 from bs4 import BeautifulSoup
@@ -11,8 +12,13 @@ import requests
 
 anonymous_name = "*************"
 
+# TODO voir description dernière balise vide qui fout la merde ?
+# TODO 500 produits par fichier excel
+# TODO useragent
+# TODO indicateur de progression
 
-class ExcelExporter():
+
+class ExcelExporter:
     """Helper class for writing excel file."""
 
     def __init__(self, filename):
@@ -51,7 +57,7 @@ def browse_page(page_url, page_number):
     # For each product
     for product in products:
         try:
-            parse_product(product['href'], exporter)
+            parse_product(product["href"], exporter)
         except Exception as e:
             log("Cannot parse product", e)
 
@@ -86,21 +92,46 @@ def parse_product(product_url, exporter: ExcelExporter):
     price = product_data.find(id="projector_price_value").text
     price = unicodedata.normalize("NFKD", price)
     price = float(price.replace("€", "").replace(",", ".").replace(" ", ""))
+    price = str(price).replace(".", ",")
+
     # Extract variant names and prices
     variants = []
-    variants_data = product_data.find_all("a", class_="projector_bundle_fake_item")
-    if len(variants_data) > 0:
-        for variant in variants_data:
-            if "selected" in variant["class"]:
-                variant_price = price
-            else:
-                variant_price = variant.find("div", class_="fake_price").text
-                variant_price = unicodedata.normalize("NFKD", variant_price)
-                variant_price = price + float(variant_price.replace("+", "").replace("€", "").replace(",", ".").replace(" ", ""))
+    variants_data = product_data.find("div", class_="fancy-select")
+    if variants_data:
+        variants_data = variants_data.find_all("li")
+        if len(variants_data) > 0:
+            for variant in variants_data:
+                if "selected" in variant["class"]:
+                    variants.append(
+                        {
+                            "price": price,
+                            "finition": variant["data-title"],
+                            "subref": product["ref"],
+                        }
+                    )
+                else:
+                    product_id = variant["data-product"]
+                    variant_id = variant["data-values_id"]
+                    response = requests.get(
+                        f"{base_url}/ajax/projector.php?product={product_id}&size=uniw&get=sizes,sizeprices&multiversions[selected]={variant_id}&multiversions[last_selected]={variant_id}"
+                    )
+                    res = response.json()
+                    variant_price = float(res["sizeprices"]["value"])
+                    variant_price = str(variant_price).replace(".", ",")
+                    variants.append(
+                        {
+                            "price": variant_price,
+                            "finition": variant["data-title"],
+                            "subref": res["sizes"]["code"],
+                        }
+                    )
+        else:
+            # TODO fix code duplication
             variants.append(
                 {
-                    "price": variant_price,
-                    "finition": variant.find("div", class_="fake_name").text,
+                    "price": price,
+                    "finition": "",
+                    "subref": product["ref"],
                 }
             )
     else:
@@ -108,11 +139,13 @@ def parse_product(product_url, exporter: ExcelExporter):
             {
                 "price": price,
                 "finition": "",
+                "subref": product["ref"],
             }
         )
 
     # Write in the output file, one line per variant
     for v in variants:
+        product["subref"] = v["subref"]
         product["price"] = v["price"]
         product["finition"] = v["finition"]
         try:
@@ -129,22 +162,24 @@ def export_product(product, exporter: ExcelExporter):
 
     log(f"    -> Exporting product: {product['title']} - {product['finition']}")
 
-    exporter.add_line([
-        product["ref"],
-        product["title"],
-        product["price"],
-        product["finition"],
-        product["category"],
-        ", ".join(product["images"]),
-        product["description"]
-    ])
+    exporter.add_line(
+        [
+            product["ref"],
+            product["subref"],
+            product["title"],
+            product["price"],
+            product["finition"],
+            product["category"],
+            ", ".join(product["images"]),
+            product["description"],
+        ]
+    )
 
 
 def log(message, exception=None):
+    print(message)
     if exception:
-        print(f"{message}\n{exception}")
-    else:
-        print(message)
+        traceback.print_exception(exception)
 
 
 def random_delay():
