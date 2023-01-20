@@ -1,3 +1,7 @@
 beautifulsoup4==4.11.1
 openpyxl==3.0.9
+packaging==21.3
+pyinstaller==5.7.0
+pyinstaller_versionfile==2.0.0
 requests==2.27.1
+setuptools==49.2.1

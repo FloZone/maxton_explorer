@@ -1,4 +1,4 @@
-import argparse
+from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 import os
 from random import randint
@@ -10,7 +10,10 @@ from bs4 import BeautifulSoup
 from openpyxl import Workbook
 import requests
 
-anonymous_name = "*************"
+# Script version
+SCRIPT_VERSION = 1.00
+SCRIPT_NAME = "ProductExplorer"
+SCRIPT_FULLNAME = f"{SCRIPT_NAME} {SCRIPT_VERSION}"
 
 
 class ExcelExporter:
@@ -32,6 +35,8 @@ class ExcelExporter:
         self.write_file()
 
 
+# Script vars
+anonymous_name = "*************"
 product_count = 0
 exporter = ExcelExporter("default.xslx")
 
@@ -191,15 +196,16 @@ def check_value(value):
     """Validate argument value."""
     ivalue = int(value)
     if ivalue < 0 or ivalue > 56:
-        raise argparse.ArgumentTypeError(f"Invalid value {value}")
+        raise ArgumentTypeError(f"Invalid value {value}")
     return ivalue
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        prog=f"python {os.path.basename(__file__)}",
-        description=f"Browse the {anonymous_name} website to extract the products data.",
+    parser = ArgumentParser(
+        prog=f"python {os.path.basename(__file__).replace('.py', '.exe')}",
+        description=f"{SCRIPT_FULLNAME} - Browse the {anonymous_name} website to extract the products data.",
     )
+    parser.add_argument("-v", "--version", action="version", version=SCRIPT_FULLNAME)
     parser.add_argument(
         dest="base_url",
         type=str,
@@ -225,7 +231,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if args.first_page > args.last_page:
-        raise argparse.ArgumentTypeError(f"Invalid arguments: {args.first_page} > {args.last_page}")
+        raise ArgumentTypeError(f"Invalid arguments: {args.first_page} > {args.last_page}")
 
     base_url = args.base_url.rstrip("/")
     products_url = f"{base_url}/fre_m_Notre-Offre-1876.html"

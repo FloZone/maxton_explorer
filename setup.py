@@ -1,143 +1,159 @@
 import distutils.cmd
 import distutils.log
 import os
+import shutil
 import subprocess
-import sys
 
-from setuptools import setup
+from packaging import version
+import pyinstaller_versionfile
+from setuptools import find_packages, setup
 
+from products_explorer import SCRIPT_NAME, SCRIPT_VERSION
 
-def list_git_modified_files():
-    files = []
-    output = subprocess.check_output(["git", "status", "--porcelain"])
-    decoded_output = output.decode("utf-8")
-    for line in decoded_output.split("\n"):
-        if line.strip() == "":
-            continue
-        elems = line.strip().split(" ")
-        status, filename = elems[0], " ".join(elems[1:]).strip()
-        if status not in ["M", "U", "??", "A"]:
-            continue
-        files.append(filename)
-    return files
-
-
-def filter_python_files(files):
-    return [f for f in files if f.endswith(".py") or os.path.isdir(f)]
-
-
-def check_is_not_python(path):
-    base, path_ext = os.path.splitext(path)
-    return path_ext != "" and path_ext != ".py"
+DESCRIPTION = "Product Explorer script"
+INPUT_FILE = "products_explorer.py"
+OUTPUT_FILE = "products_explorer.exe"
+VERSION_FILE = "version_info.txt"
 
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-class BaseCommand(distutils.cmd.Command):
+class BuildCommand(distutils.cmd.Command):
+    """Build script binary."""
 
-    user_options = [("path=", "p", "path"), ("auto", "a", "auto")]
-
-    def announce_with_paths(self, msg, paths):
-        self.announce(f"{msg} on path(s) {', '.join(paths)} ...", level=distutils.log.INFO)
-
-    def try_execute(self, msg, args):
-        try:
-            if msg:
-                self.announce(msg, level=distutils.log.INFO)
-            subprocess.check_call(args)
-        except subprocess.CalledProcessError:
-            return False
-
-        return True
+    description = "Build script to .exe file"
+    user_options = []
 
     def initialize_options(self):
-        self.path = None
-        self.auto = False
+        pass
 
     def finalize_options(self):
-        if self.path is None:
-            self.path = "."
+        pass
 
-    def run(self):
-        if self.auto:
-            files = filter_python_files(list_git_modified_files())
-            if not self.apply_command(files):
-                sys.exit(1)
+    def run(self) -> bool:
+        print("test")
+        self.announce("Generating version file", level=distutils.log.WARN)
+        v = version.parse(str(SCRIPT_VERSION))
+        v = f"{str(v)}.0.0"
+        pyinstaller_versionfile.create_versionfile(
+            output_file=VERSION_FILE,
+            version=v,
+            company_name="FloZone",
+            file_description=DESCRIPTION,
+            internal_name=SCRIPT_NAME,
+            legal_copyright="Copyright © 2023",
+            original_filename=OUTPUT_FILE,
+            product_name=SCRIPT_NAME,
+        )
+
+        self.announce("\nBuilding binary", level=distutils.log.WARN)
+        res = subprocess.run(
+            [
+                "pyinstaller",
+                "--clean",
+                "--icon=app.ico",
+                "--onefile",
+                f"--version-file={VERSION_FILE}",
+                f"./{INPUT_FILE}",
+            ]
+        )
+        if res.returncode == 0:
+            self.announce(f"\nBinary file generated to './dist/{OUTPUT_FILE}'", level=distutils.log.WARN)
+            return True
         else:
-            if not self.apply_command([self.path]):
-                sys.exit(1)
+            return False
 
 
-class LintCommand(BaseCommand):
+class CleanCommand(distutils.cmd.Command):
+    """Clean temporary files."""
+
+    description = "Clean temporary files"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self) -> bool:
+        self.announce("Cleaning project...", level=distutils.log.WARN)
+
+        paths = ["build", "dist", "__pycache__", "sc_device_installer.spec", VERSION_FILE]
+        for p in paths:
+            if os.path.isdir(p):
+                self.announce(f"Cleaning ./{p}/", level=distutils.log.WARN)
+                shutil.rmtree(p)
+            elif os.path.isfile(p):
+                self.announce(f"Cleaning ./{p}", level=distutils.log.WARN)
+                os.remove(p)
+        return True
+
+
+class LintCommand(distutils.cmd.Command):
     """Lint with flake8."""
 
     description = "run flake8 on source files"
+    user_options = []
 
-    def apply_command(self, paths) -> bool:
-        self.announce_with_paths("linting files", paths)
-        return self.try_execute("flake8 pass ...", ["flake8", *paths])
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self) -> bool:
+        self.announce("Linting...", level=distutils.log.WARN)
+
+        self.announce("flake8 pass...", level=distutils.log.WARN)
+        return subprocess.run(["flake8", INPUT_FILE]).returncode == 0
 
 
-class FormatCommand(BaseCommand):
+class FormatCommand(distutils.cmd.Command):
     """Format with black."""
 
-    description = "run lf script, isort and black on source files"
+    description = "Run isort and black on source files"
+    user_options = []
 
-    def apply_command(self, paths) -> bool:
-        self.announce_with_paths("formatting files", paths)
+    def initialize_options(self):
+        pass
 
-        if not self.try_execute("isort pass ...", ["isort", "-rc", "--atomic", *paths]):
+    def finalize_options(self):
+        pass
+
+    def run(self) -> bool:
+        self.announce("Formatting...", level=distutils.log.WARN)
+
+        self.announce("isort pass...", level=distutils.log.WARN)
+        if subprocess.run(["isort", "-rc", "--atomic", INPUT_FILE]).returncode != 0:
             return False
 
-        return self.try_execute(
-            "black pass ...",
+        self.announce("black pass...", level=distutils.log.WARN)
+        return subprocess.run(
             [
                 "black",
                 "--target-version",
                 "py38",
                 "-l",
                 "120",
-                "--exclude",
-                "/node_modules|staticfiles|translations|dist/",
-                *paths,
+                INPUT_FILE,
             ],
-        )
-
-
-class FormatCheckCommand(BaseCommand):
-    """Format check with black."""
-
-    description = "run black check on source files"
-
-    def apply_command(self, paths) -> bool:
-        self.announce_with_paths("checking if files are formatted", paths)
-
-        return self.try_execute(
-            "black pass ...",
-            [
-                "black",
-                "--target-version",
-                "py36",
-                "-l",
-                "120",
-                "--exclude",
-                "/node_modules|staticfiles|translations/",
-                "--check",
-                *paths,
-            ],
-        )
+        ).returncode == 0
 
 
 setup(
-    name="Product Explorer",
+    name=SCRIPT_NAME,
+    version=SCRIPT_VERSION,
     author="FloZone",
-    description=("Product Explorer"),
+    description=DESCRIPTION,
     long_description=read("README.md"),
+    packages=find_packages(),
     cmdclass={
+        "clean": CleanCommand,
+        "build": BuildCommand,
         "lint": LintCommand,
         "fmt": FormatCommand,
-        "fmtcheck": FormatCheckCommand,
     },
 )
