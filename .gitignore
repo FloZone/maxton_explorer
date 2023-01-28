@@ -5,5 +5,5 @@ dist/
 *.spec
 version_info.txt
 
-*.xlsx
+*.xslx
 .vscode
