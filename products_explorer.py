@@ -39,7 +39,7 @@ class ExcelExporter:
 # Script vars
 anonymous_name = "*************"
 product_count = 0
-exporter = ExcelExporter("default.xslx")
+exporter = ExcelExporter("default.xlsx")
 
 
 def browse_page(page_url, page_number):
@@ -141,8 +141,16 @@ def parse_product(product_url, exporter: ExcelExporter):
                             "subref": res["sizes"]["code"],
                         }
                     )
-    elif product_data.find("div", class_="product_section_sub"):  # Old products, different way to parse
-        variants_data = product_data.find("div", class_="product_section_sub").find_all("a")
+    elif product_data.find("div", class_="product_section versions") and product_data.find(
+        "div", class_="product_section versions"
+    ).find(
+        "div", class_="product_section_sub"
+    ):  # Old products, different way to parse
+        variants_data = (
+            product_data.find("div", class_="product_section versions")
+            .find("div", class_="product_section_sub")
+            .find_all("a")
+        )
         if len(variants_data) > 0:
             for variant in variants_data:
                 if "active" in variant["class"]:
