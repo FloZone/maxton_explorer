@@ -1,4 +1,6 @@
 # ************* WebsiteExplorer
+![Logo](app.ico)
+
 A simple script for browsing the ************* website and extract the products data.
 
 It is written in python and a .exe binary is generated for Windows users.
