@@ -2,6 +2,7 @@ from argparse import ArgumentParser, ArgumentTypeError
 from datetime import datetime
 import os
 from random import randint
+import sys
 import time
 import traceback
 import unicodedata
@@ -71,6 +72,7 @@ def browse_page(page_url, page_number):
             product_count += 1
         except Exception as e:
             log("Cannot parse product", e)
+            exporter.add_line([f"Error parsing product: {e}"])
 
 
 def parse_product(product_url, exporter: ExcelExporter):
@@ -139,6 +141,33 @@ def parse_product(product_url, exporter: ExcelExporter):
                             "subref": res["sizes"]["code"],
                         }
                     )
+    elif product_data.find("div", class_="product_section_sub"):  # Old products, different way to parse
+        variants_data = product_data.find("div", class_="product_section_sub").find_all("a")
+        if len(variants_data) > 0:
+            for variant in variants_data:
+                if "active" in variant["class"]:
+                    variants.append(
+                        {
+                            "price": price,
+                            "finition": variant["title"],
+                            "subref": product["ref"],
+                        }
+                    )
+                else:
+                    response = requests.get(base_url + variant["href"])
+                    res = BeautifulSoup(response.content, "html.parser")
+                    variant_price = product_data.find(id="projector_price_value").text
+                    variant_price = unicodedata.normalize("NFKD", price)
+                    variant_price = float(price.replace("€", "").replace(",", ".").replace(" ", ""))
+                    variant_price = str(price).replace(".", ",")
+                    variants.append(
+                        {
+                            "price": variant_price,
+                            "finition": variant["title"],
+                            "subref": res.find("div", class_="proj_code").find("strong").text,
+                        }
+                    )
+
     if not variants:
         variants.append(
             {
@@ -157,6 +186,7 @@ def parse_product(product_url, exporter: ExcelExporter):
             export_product(product, exporter)
         except Exception as e:
             log("Cannot export product", e)
+            exporter.add_line([f"Error writing product: {e}"])
 
     # Randomize delay for preventing request spam
     random_delay()
@@ -240,3 +270,6 @@ if __name__ == "__main__":
     for page_number in range(args.first_page, args.last_page):
         page_url = f"{products_url}?counter={page_number}"
         browse_page(page_url, page_number)
+
+    input("\nExecution completed. Press 'Enter' to exit...")
+    sys.exit(0)
