@@ -12,7 +12,7 @@ from openpyxl import Workbook
 import requests
 
 # Script version
-SCRIPT_VERSION = 1.00
+SCRIPT_VERSION = 1.01
 SCRIPT_NAME = "ProductExplorer"
 SCRIPT_FULLNAME = f"{SCRIPT_NAME} {SCRIPT_VERSION}"
 
@@ -39,14 +39,15 @@ class ExcelExporter:
 # Script vars
 anonymous_name = "*************"
 product_count = 0
-exporter = ExcelExporter("default.xlsx")
+# Export file
+now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+exporter = ExcelExporter(f"products_{now}.xlsx")
 
 
 def browse_page(page_url, page_number):
     """Browse all products pages and extract each product data."""
 
     global product_count
-    global exporter
 
     log(f"Parsing page {page_number}: {page_url}")
     # Parse the page
@@ -57,25 +58,17 @@ def browse_page(page_url, page_number):
     products = data.find_all("a", class_="product_wrapper_hover")
     log(f"Find {len(products)} products")
 
-    # One file for ~500 products (one page has ~120 products)
-    if page_number % 4 == 0:
-        # Generate filename
-        file_number = int(page_number / 4)
-        now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        export_filename = f"products_{now}_{file_number}.xlsx"
-        exporter = ExcelExporter(export_filename)
-
     # For each product
     for product in products:
         try:
-            parse_product(product["href"], exporter)
+            parse_product(product["href"])
             product_count += 1
         except Exception as e:
             log("Cannot parse product", e)
             exporter.add_line([f"Error parsing product: {e}"])
 
 
-def parse_product(product_url, exporter: ExcelExporter):
+def parse_product(product_url):
     """Parse the product page and extract its data."""
 
     log(f"  -> [{product_count}] Parsing product: {product_url}")
@@ -191,7 +184,7 @@ def parse_product(product_url, exporter: ExcelExporter):
         product["price"] = v["price"]
         product["finition"] = v["finition"]
         try:
-            export_product(product, exporter)
+            export_product(product)
         except Exception as e:
             log("Cannot export product", e)
             exporter.add_line([f"Error writing product: {e}"])
@@ -200,7 +193,7 @@ def parse_product(product_url, exporter: ExcelExporter):
     random_delay()
 
 
-def export_product(product, exporter: ExcelExporter):
+def export_product(product):
     """Exporting the product data."""
 
     log(f"    * Exporting product: {product['title']} - {product['finition']}")
