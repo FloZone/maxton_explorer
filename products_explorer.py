@@ -55,7 +55,7 @@ def browse_page(page_url, page_number):
     data = BeautifulSoup(page_request.content, "html.parser")
 
     # Get all products links
-    products = data.find_all("a", class_="product_wrapper_hover")
+    products = data.find_all("a", class_="product-name")
     log(f"Find {len(products)} products")
 
     # For each product
@@ -150,7 +150,7 @@ def parse_product(product_url):
                     variants.append(
                         {
                             "price": price,
-                            "finition": variant["title"],
+                            "finition": variant.find("div", class_="version_name").text,
                             "subref": product["ref"],
                         }
                     )
