@@ -12,7 +12,7 @@ from openpyxl import Workbook
 import requests
 
 # Script version
-SCRIPT_VERSION = 1.01
+SCRIPT_VERSION = 1.02
 SCRIPT_NAME = "ProductExplorer"
 SCRIPT_FULLNAME = f"{SCRIPT_NAME} {SCRIPT_VERSION}"
 
