@@ -1,7 +1,7 @@
-# ************* WebsiteExplorer
+# MaxtonDesign WebsiteExplorer
 ![Logo](app.ico)
 
-A simple script for browsing the ************* website and extract the products data.
+A simple script for browsing the MaxtonDesign website and extract the products data.
 
 It is written in python and a .exe binary is generated for Windows users.
 
@@ -12,22 +12,19 @@ pip install -r ./requirements.txt
 ```
 
 ## Generating a new binary
-Do not forget to change the script version in `products_explorer.py` file line 15: `SCRIPT_VERSION=X.X`.
+Do not forget to change the script version in `maxton_explorer.py` file line 15: `SCRIPT_VERSION=X.X`.
 
 Run the following command to build the .exe binary:
 ```bash
 python setup.py build
 ```
-The generated binary is located to `./dist/product_explorer.exe`
+The generated binary is located to `./dist/maxton_explorer.exe`
 
 ## Command-line help
 ```
-usage: python products_explorer.py [-h] [-b FIRST_PAGE] [-e LAST_PAGE] base_url
+usage: python maxton_explorer.py [-h] [-b FIRST_PAGE] [-e LAST_PAGE]
 
-Browse the ************ website to extract the products data.
-
-positional arguments:
-  base_url              The website URL
+Browse the maxton-design website to extract the products data.
 
 optional arguments:
   -h, --help            show this help message and exit
