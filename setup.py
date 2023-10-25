@@ -8,11 +8,11 @@ from packaging import version
 import pyinstaller_versionfile
 from setuptools import find_packages, setup
 
-from products_explorer import SCRIPT_NAME, SCRIPT_VERSION
+from maxton_explorer import SCRIPT_NAME, SCRIPT_VERSION
 
-DESCRIPTION = "Product Explorer script"
-INPUT_FILE = "products_explorer.py"
-OUTPUT_FILE = "products_explorer.exe"
+DESCRIPTION = "Maxton Explorer script"
+INPUT_FILE = "maxton_explorer.py"
+OUTPUT_FILE = "maxton_explorer.exe"
 VERSION_FILE = "version_info.txt"
 
 
@@ -81,7 +81,7 @@ class CleanCommand(distutils.cmd.Command):
     def run(self) -> bool:
         self.announce("Cleaning project...", level=distutils.log.WARN)
 
-        paths = ["build", "dist", "__pycache__", "products_explorer.spec", VERSION_FILE]
+        paths = ["build", "dist", "__pycache__", "maxton_explorer.spec", VERSION_FILE]
         for p in paths:
             if os.path.isdir(p):
                 self.announce(f"Cleaning ./{p}/", level=distutils.log.WARN)

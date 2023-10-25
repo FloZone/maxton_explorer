@@ -13,7 +13,7 @@ import requests
 
 # Script version
 SCRIPT_VERSION = 1.01
-SCRIPT_NAME = "ProductExplorer"
+SCRIPT_NAME = "MaxtonExplorer"
 SCRIPT_FULLNAME = f"{SCRIPT_NAME} {SCRIPT_VERSION}"
 
 
@@ -37,7 +37,7 @@ class ExcelExporter:
 
 
 # Script vars
-anonymous_name = "*************"
+website_name = "maxton-design"
 product_count = 0
 # Export file
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -85,7 +85,7 @@ def parse_product(product_url):
     category = product_data.find("title").text
     category_selector = "Notre Offre \\ "
     category_sub = category.rfind(category_selector)
-    product["category"] = category[(category_sub + len(category_selector)) : -len(f" | {anonymous_name}")].replace(
+    product["category"] = category[(category_sub + len(category_selector)) : -len(f" | {website_name}")].replace(
         " \\ ", ">"
     )
     # Extract images links
@@ -234,14 +234,9 @@ def check_value(value):
 if __name__ == "__main__":
     parser = ArgumentParser(
         prog=f"python {os.path.basename(__file__).replace('.py', '.exe')}",
-        description=f"{SCRIPT_FULLNAME} - Browse the {anonymous_name} website to extract the products data.",
+        description=f"{SCRIPT_FULLNAME} - Browse the {website_name} website to extract the products data.",
     )
     parser.add_argument("-v", "--version", action="version", version=SCRIPT_FULLNAME)
-    parser.add_argument(
-        dest="base_url",
-        type=str,
-        help="The website URL",
-    )
     parser.add_argument(
         "-b",
         "--begin",
@@ -264,7 +259,7 @@ if __name__ == "__main__":
     if args.first_page > args.last_page:
         raise ArgumentTypeError(f"Invalid arguments: {args.first_page} > {args.last_page}")
 
-    base_url = args.base_url.rstrip("/")
+    base_url = "https://maxton-design.fr"
     products_url = f"{base_url}/fre_m_Notre-Offre-1876.html"
 
     # For each catalog page
