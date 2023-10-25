@@ -12,7 +12,7 @@ pip install -r ./requirements.txt
 ```
 
 ## Generating a new binary
-Do not forget to change the script version in `products_explorer.py` file line 18: `SCRIPT_VERSION=X.X`.
+Do not forget to change the script version in `products_explorer.py` file line 15: `SCRIPT_VERSION=X.X`.
 
 Run the following command to build the .exe binary:
 ```bash
