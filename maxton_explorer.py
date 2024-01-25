@@ -251,21 +251,33 @@ if __name__ == "__main__":
         "--end",
         dest="last_page",
         type=check_value,
-        default=56,
+        default=100,
         required=False,
         help="Last page to end browsing",
+    )
+    parser.add_argument(
+        "-p",
+        "--product",
+        dest="product_url",
+        required=False,
+        help="Specific product URL to export",
     )
     args = parser.parse_args()
     if args.first_page > args.last_page:
         raise ArgumentTypeError(f"Invalid arguments: {args.first_page} > {args.last_page}")
 
-    base_url = "https://maxton-design.fr"
+    base_url = "https://maxton.design"
     products_url = f"{base_url}/fre_m_Notre-Offre-1876.html"
 
-    # For each catalog page
-    for page_number in range(args.first_page, args.last_page):
-        page_url = f"{products_url}?counter={page_number}"
-        browse_page(page_url, page_number)
+    # Parse a specific product
+    if args.product_url:
+        parse_product(args.product_url)
+
+    else:
+        # For each catalog page
+        for page_number in range(args.first_page, args.last_page):
+            page_url = f"{products_url}?counter={page_number}"
+            browse_page(page_url, page_number)
 
     input("\nExecution completed. Press 'Enter' to exit...")
     sys.exit(0)
