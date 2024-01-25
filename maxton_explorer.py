@@ -219,8 +219,8 @@ def log(message, exception=None):
 
 
 def random_delay():
-    """Random sleep between 0.5 and 2sec."""
-    time.sleep(float(randint(5, 20)) / 10)
+    """Random sleep between 0.1 and 0.5sec."""
+    time.sleep(float(randint(1, 5)) / 10)
 
 
 def check_value(value):
