@@ -24,7 +24,7 @@ The generated binary is located to `./dist/maxton_explorer.exe`
 ```
 usage: python maxton_explorer.py [-h] [-b FIRST_PAGE] [-e LAST_PAGE]
 
-Browse the maxton-design website to extract the products data.
+Browse the MaxtonDesign website to extract the products data.
 
 optional arguments:
   -h, --help            show this help message and exit

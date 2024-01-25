@@ -12,7 +12,7 @@ from openpyxl import Workbook
 import requests
 
 # Script version
-SCRIPT_VERSION = 1.01
+SCRIPT_VERSION = 1.03
 SCRIPT_NAME = "MaxtonExplorer"
 SCRIPT_FULLNAME = f"{SCRIPT_NAME} {SCRIPT_VERSION}"
 
@@ -37,7 +37,7 @@ class ExcelExporter:
 
 
 # Script vars
-website_name = "maxton-design"
+website_name = "MaxtonDesign"
 product_count = 0
 # Export file
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
