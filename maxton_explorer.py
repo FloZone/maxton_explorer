@@ -60,15 +60,17 @@ def browse_page(page_url, page_number):
 
     # For each product
     for product in products:
+        product_url = ""
         try:
-            parse_product(product["href"])
+            product_url = product["href"]
+            parse_product(product_url, products_url)
             product_count += 1
         except Exception as e:
             log("Cannot parse product", e)
-            exporter.add_line([f"Error parsing product: {e}"])
+            exporter.add_line([f"Error parsing product: {e}", f"Product: {product_url}", f"Page: {products_url}"])
 
 
-def parse_product(product_url):
+def parse_product(product_url, products_url=""):
     """Parse the product page and extract its data."""
 
     log(f"  -> [{product_count}] Parsing product: {product_url}")
@@ -187,7 +189,7 @@ def parse_product(product_url):
             export_product(product)
         except Exception as e:
             log("Cannot export product", e)
-            exporter.add_line([f"Error writing product: {e}"])
+            exporter.add_line([f"Error exporting product: {e}", f"Product: {product_url}", f"Page: {products_url}"])
 
     # Randomize delay for preventing request spam
     random_delay()
