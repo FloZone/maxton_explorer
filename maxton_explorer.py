@@ -12,7 +12,7 @@ from openpyxl import Workbook
 import requests
 
 # Script version
-SCRIPT_VERSION = 1.03
+SCRIPT_VERSION = 1.04
 SCRIPT_NAME = "MaxtonExplorer"
 SCRIPT_FULLNAME = f"{SCRIPT_NAME} {SCRIPT_VERSION}"
 
